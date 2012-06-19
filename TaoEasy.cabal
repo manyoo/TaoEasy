@@ -31,7 +31,17 @@ Executable TaoEasy
     snap-server == 0.8.*,
     text >= 0.11 && < 0.12,
     time >= 1.1 && < 1.5,
-    xmlhtml == 0.2.*
+    xmlhtml == 0.2.*,
+    snaplet-mongodb-minimalistic,
+    mongoDB >= 1.2.0,
+    tagsoup >= 0.12.6,
+    encoding >= 0.6.6,
+    aeson >= 0.6.0.2,
+    bson >= 0.2.0,
+    containers == 0.4.*,
+    network == 2.3.*,
+    HTTP == 4000.*
+    
 
   if flag(development)
     cpp-options: -DDEVELOPMENT
