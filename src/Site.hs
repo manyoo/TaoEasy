@@ -31,7 +31,7 @@ import           Text.Templating.Heist
 import           Text.XmlHtml hiding (render)
 ------------------------------------------------------------------------------
 import           Application
-import           JHS
+import           Spider
 import           Model
 
 updateJHSHandler = do

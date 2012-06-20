@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module JHS where
+module Spider where
 
 import Text.HTML.TagSoup
 import Network.HTTP
@@ -20,6 +20,7 @@ import Model
 import JHSPage
 --import TBAPIServer
 
+-- code for JuHuaSuan
 channelDict = [("服饰", "1000"),
                ("时尚", "2000"),
                ("鞋包", "3000"),
@@ -68,3 +69,8 @@ jhsItemsForCrazyWeek = do
   --urlMaps <- mapM (getTBKUrlsForItems . getItemIds) allItems
       -- , jhsTBKUrl = M.lookup (jhsItemId jhs) urlMap
   return $ concat $ map (\(items, ch) -> map (\jhs -> jhs {jhsChannel = ch, jhsCreated = Just tm}) items) $ zip allItems ["周末1","周末2","周末3"]
+
+
+
+
+-- code for TaoJinBi
