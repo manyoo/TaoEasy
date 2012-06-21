@@ -41,10 +41,20 @@ updateJHSHandler = do
     insertMany "juhuasuan" $ map itemToDocument items
   writeBS "<html><head><title>Succeed</title></head><body><h1>Succeed!</h1></body></html>"
 
+updateJinbiHandler = do
+  extendTimeout 100000000
+  types <- liftM (map jinbiItemTypeFromDocument) $ unsafeWithDB $ rest =<< (find $ select [] "jinbitypes")
+  items <- liftIO $ getJinbiItems types
+  eitherWithDB $ do
+    delete $ Select [] "jinbiitems"
+    insertMany "jinbiitems" $ map jinbiItemToDocument items
+  writeBS "<html><head><title>Succeed</title></head><body><h1>Succeed!</h1></body></html>"
+
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
 routes = [ ("/api/update_jhs", updateJHSHandler)
+         , ("/api/update_jinbi", updateJinbiHandler)
          , ("", with heist heistServe)
          , ("", serveDirectory "static")
          ]

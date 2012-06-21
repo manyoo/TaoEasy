@@ -41,7 +41,8 @@ Executable TaoEasy
     bson >= 0.2.0,
     containers == 0.4.*,
     network == 2.3.*,
-    HTTP == 4000.*
+    HTTP == 4000.*,
+    utf8-string >= 0.3.7
     
 
   if flag(development)

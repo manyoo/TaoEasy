@@ -49,3 +49,58 @@ getTextValue doc name = fromMaybe "" $ doc !? name
 getDoubleValue doc name = fromMaybe 0.0 $ doc !? name
 getIntValue doc name = fromMaybe 0 $ doc !? name
 
+
+data JinbiItemType = JinbiItemType {
+  jbTypeName :: Text,
+  jbParentTypeName :: Text,
+  jbTypeId :: Int
+  } deriving Show
+
+jinbiItemTypeToDocument t = ["tn" =: jbTypeName t,
+                             "ptn" =: jbParentTypeName t,
+                             "cat_id" =: jbTypeId t]
+
+jinbiItemTypeFromDocument doc = JinbiItemType {
+  jbTypeName = getTextValue doc "tn",
+  jbParentTypeName = getTextValue doc "ptn",
+  jbTypeId = getIntValue doc "cat_id"
+  }
+
+data JinbiItem = JinbiItem {
+  jbiTitle :: Text,
+  jbiId :: Text,
+  jbiOrigPrice :: Text,
+  jbiNewPrice :: Text,
+  jbiCoin :: Text,
+  jbiDiscount :: Double,
+  jbiSales :: Text,
+  jbiPicUrl :: Text,
+  jbiTBKUrl :: Maybe Text,
+  jbiType :: JinbiItemType
+  } deriving Show
+
+jinbiItemToDocument j = ["title" =: jbiTitle j,
+                         "item_id" =: jbiId j,
+                         "orig_price" =: jbiOrigPrice j,
+                         "new_price" =: jbiNewPrice j,
+                         "coin" =: jbiCoin j,
+                         "discount" =: jbiDiscount j,
+                         "sales" =: jbiSales j,
+                         "pic_url" =: jbiPicUrl j,
+                         "tbk_url" =: jbiTBKUrl j,
+                         "jb_type" =: jinbiItemTypeToDocument (jbiType j)]
+
+jinbiItemFromDocument doc = JinbiItem {
+  jbiTitle = getTextValue doc "title",
+  jbiId = getTextValue doc "item_id",
+  jbiOrigPrice = getTextValue doc "orig_price",
+  jbiNewPrice = getTextValue doc "new_price",
+  jbiCoin = getTextValue doc "coin",
+  jbiDiscount = getDoubleValue doc "discount",
+  jbiSales = getTextValue doc "sales",
+  jbiPicUrl = getTextValue doc "pic_url",
+  jbiTBKUrl = doc !? "tbk_url",
+  jbiType = jinbiItemTypeFromDocument $ fromJust $ doc !? "jb_type"
+  }
+
+
