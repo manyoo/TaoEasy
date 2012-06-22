@@ -104,3 +104,32 @@ jinbiItemFromDocument doc = JinbiItem {
   }
 
 
+data TeJiaItem = TeJiaItem {
+  tjTitle :: Text,
+  tjId :: Text,
+  tjOrigPrice :: Text,
+  tjNewPrice :: Text,
+  tjSales :: Text,
+  tjPicUrl :: Text,
+  tjTBKUrl :: Maybe Text,
+  tjType :: Text
+  } deriving Show
+
+tejiaItemToDocument t = ["title" =: tjTitle t,
+                         "item_id" =: tjId t,
+                         "orig_price" =: tjOrigPrice t,
+                         "new_price" =: tjNewPrice t,
+                         "sales" =: tjSales t,
+                         "pic_url" =: tjPicUrl t,
+                         "tbk_url" =: tjTBKUrl t,
+                         "type" =: tjType t]
+tejiaItemFromDocument doc = TeJiaItem {
+  tjTitle = getTextValue doc "title",
+  tjId = getTextValue doc "item_id",
+  tjOrigPrice = getTextValue doc "orig_price",
+  tjNewPrice = getTextValue doc "new_price",
+  tjSales = getTextValue doc "sales",
+  tjPicUrl = getTextValue doc "pic_url",
+  tjTBKUrl = doc !? "tbk_url",
+  tjType = getTextValue doc "type"
+  }

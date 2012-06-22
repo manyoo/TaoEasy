@@ -8,14 +8,14 @@ import Data.Maybe
 
 import Model
 
-tags2JinbiItems :: JinbiItemType -> [Tag String] -> ([JinbiItem], Bool)
-tags2JinbiItems cat tags = let items = map (tags2JinbiItem cat) $ partitions (~== "<a>") $ takeWhile (~/= "<div class='list-pagination'>") $ dropWhile (~/= "<div class='items clearfix'>") tags
-                               !pageTags = takeWhile (~/= "<a class='page-next'>") $ dropWhile (~/= "<span class='page-cur'>") tags
-                               hasNext = not $ null $ dropWhile (~/= "<a>") pageTags
-                           in (items, hasNext)
+tags2JinbiItems :: JinbiItemType -> [Tag String] -> IO ([JinbiItem], Bool)
+tags2JinbiItems cat tags = do items <- mapM (tags2JinbiItem cat) $ partitions (~== "<a>") $ takeWhile (~/= "</div>") $ dropWhile (~/= "<div class='items clearfix'>") tags
+                              let !pageTags = takeWhile (~/= "<a class='page-next'>") $ dropWhile (~/= "<span class='page-cur'>") tags
+                                  hasNext = not $ null $ dropWhile (~/= "<a>") pageTags
+                              return (items, hasNext)
 
 
-tags2JinbiItem cat tags = JinbiItem title id origPrice newPrice coin disc sale pic Nothing cat
+tags2JinbiItem cat tags = return $ JinbiItem title id origPrice newPrice coin disc sale pic Nothing cat
   where !atags = dropWhile (~/= "<a>") tags
         !atag = if null atags
                 then TagOpen "a" [("href","")]
@@ -56,5 +56,5 @@ idFromUrl url = if T.null url || not (T.pack "?" `T.isInfixOf` url)
         qs = T.split (== '&') query
         dic = map (\q -> let a = T.split (== '=') q in (head a, head $ tail a)) qs
         itemId = case lookup (T.pack "id") dic of
-          Nothing -> lookup (T.pack "itemId") dic
+          Nothing -> lookup (T.pack "item_id") dic
           Just w -> Just w

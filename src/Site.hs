@@ -50,11 +50,20 @@ updateJinbiHandler = do
     insertMany "jinbiitems" $ map jinbiItemToDocument items
   writeBS "<html><head><title>Succeed</title></head><body><h1>Succeed!</h1></body></html>"
 
+updateTeJiaHandler = do
+  extendTimeout 100000000
+  items <- liftIO getTeJiaItems
+  eitherWithDB $ do
+    delete $ Select [] "tejia"
+    insertMany "tejia" $ map tejiaItemToDocument items
+  writeBS "<html><head><title>Succeed</title></head><body><h1>Succeed!</h1></body></html>"
+
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
 routes = [ ("/api/update_jhs", updateJHSHandler)
          , ("/api/update_jinbi", updateJinbiHandler)
+         , ("/api/update_tejia", updateTeJiaHandler)
          , ("", with heist heistServe)
          , ("", serveDirectory "static")
          ]

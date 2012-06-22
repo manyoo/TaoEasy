@@ -20,6 +20,7 @@ import Control.Monad
 import Model
 import JHSPage
 import JinbiPage
+import TeJiaPage
 --import TBAPIServer
 
 -- utils
@@ -78,7 +79,7 @@ jhsItemsForCrazyWeek = do
 
 -- code for TaoJinBi
 getJinbiItems :: [JinbiItemType] -> IO [JinbiItem]
-getJinbiItems cats = liftM concat $ mapM getJinbiItemsForCat cats
+getJinbiItems = liftM concat . mapM getJinbiItemsForCat
 
 getJinbiItemsForCat :: JinbiItemType -> IO [JinbiItem]
 getJinbiItemsForCat cat = getJinbiStartWith 1
@@ -92,9 +93,39 @@ getJinbiItemsForCatOnPage cat page = do
   let hostHdr = mkHeader HdrHost "taojinbi.taobao.com"
       uaHdr = mkHeader HdrUserAgent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_4) AppleWebKit/534.57.2 (KHTML, like Gecko) Version/5.1.6 Safari/534.56.5"
   tags <- tagsForUrl True [hostHdr, uaHdr] $ jinbiUrlForCatAndPage (jbTypeId cat) page
-  return $ tags2JinbiItems cat tags
+  tags2JinbiItems cat tags
 
 jinbiUrlForCatAndPage cat page = T.intercalate "" ["http://taojinbi.taobao.com/home/category_search_home.htm?order=2&category_id=", catStr, "&page=", pageStr]
   where pageStr = T.pack $ show page
         catStr = T.pack $ show cat
 
+
+-- code for TianTianTeJia
+tejiaDict = [("时尚女装","1"),
+             ("流行男装","2"),
+             ("男鞋女鞋","3"),
+             ("包包配饰","4"),
+             ("美容护肤","5"),
+             ("数码家电","6"),
+             ("家居生活","7"),
+             ("美食特产","8"),
+             ("母婴用品","9"),
+             ("运动户外","10")]
+
+tejiaUrlForCatAndPage cat page = T.intercalate "" ["http://tejia.taobao.com/tejiaList.htm?pid=", cat, "&p=", pageStr]
+  where pageStr = T.pack $ show page
+
+getTeJiaItems = liftM concat $ mapM getTeJiaItemsForCat tejiaDict
+
+getTeJiaItemsForCat cat = getTeJiaStartWith 1
+  where getTeJiaStartWith p = do (items, next) <- getTeJiaItemsForCatOnPage cat p
+                                 if next
+                                   then liftM (items ++) $ getTeJiaStartWith (p + 1)
+                                   else return items
+
+getTeJiaItemsForCatOnPage :: (Text, Text) -> Int -> IO ([TeJiaItem], Bool)
+getTeJiaItemsForCatOnPage cat@(catName, catId) page = do
+  let hostHdr = mkHeader HdrHost "tejia.taobao.com"
+      uaHdr = mkHeader HdrUserAgent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_4) AppleWebKit/534.57.2 (KHTML, like Gecko) Version/5.1.6 Safari/534.56.5"
+  tags <- tagsForUrl True [hostHdr, uaHdr] $ tejiaUrlForCatAndPage catId page
+  tags2TeJiaItems cat tags
