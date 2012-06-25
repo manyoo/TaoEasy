@@ -40,15 +40,11 @@ import           Network.HTTP hiding (getRequest)
 import           Network.URI hiding (query)
 
 
-import Application
-import Model
-import Util
-import DataBase
-
 defaultAppKey = "12391996"
 defaultAppSecret = "15bbaf6509958270284671e6d7eb6cc0"
 defaultTBKPID = "28971285"
 
+{-
 -- handlers for manager login
 validateCallbackParam n m = do if (M.member n m) && ((BS.length $ head $ m M.! n) /= 0)
                                  then return ()
@@ -88,10 +84,6 @@ loginCallbackHandler = do
   finishWithHTML
 
 
-fromResult :: a -> Result a -> a
-fromResult def (Error _) = def
-fromResult def (Success a) = a
-
 refreshSession session = do
   let params = M.insert "appkey" [defaultAppKey] $ M.insert "refresh_token" [encodeUtf8 $ refreshToken session] $ M.singleton "sessionkey" [encodeUtf8 $ sessionKey session]
       strArr = ["appkey",defaultAppKey,"refresh_token", encodeUtf8 $ refreshToken session, "sessionkey", encodeUtf8 $ sessionKey session, defaultAppSecret]
@@ -122,6 +114,7 @@ refreshSession session = do
                       _ -> return Nothing
       _ -> return Nothing
 
+-}
 
 ----------------------------------------------------------------------------------------------------
 -- This is the more useful functions for interacting with Taobao Server.
@@ -156,6 +149,10 @@ methodToByString SHOP_GET = "taobao.shop.get"
 methodToByString COLLECT_ITEM_GET = "taobao.favorite.search"
 methodToByString COLLECT_ITEM_ADD = "taobao.favorite.add"
 methodToByString GET_PROMOTION = "taobao.ump.promotion.get"
+
+fromResult :: a -> Result a -> a
+fromResult def (Error _) = def
+fromResult def (Success a) = a
 
 signParam param = U.fromString $ map toUpper $ show $ md5 $ L8.fromChunks [paramStr]
   where

@@ -18,6 +18,7 @@ import           Data.Maybe
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import           Data.Time.Clock
+import qualified Data.Set as Set
 
 import           Database.MongoDB
 
@@ -33,29 +34,39 @@ import           Text.XmlHtml hiding (render)
 import           Application
 import           Spider
 import           Model
+import           TBKChecker
+
+checkTBKandSaveTo collection items = do
+  existing <- maybeWithDB $ rest =<< (find $ select [] collection)
+  case existing of
+    Nothing -> do newItems <- liftM Set.toList $ liftIO $ checkTBKForItems $ Set.fromList items
+                  eitherWithDB $ insertMany collection $ map toDocument newItems
+    Just exist -> do let exSet = Set.fromList $ map fromDocument exist
+                         itemsSet = Set.fromList items
+                         inter = Set.intersection exSet itemsSet
+                         new = Set.difference itemsSet inter
+                         toDelete = Set.difference exSet inter
+                     newItems <- liftM Set.toList $ liftIO $ checkTBKForItems new
+                     eitherWithDB $ do
+                       mapM_ (\doc -> delete $ select doc collection) $ map toDocument $ Set.toList toDelete
+                       insertMany collection $ map toDocument newItems
 
 updateJHSHandler = do
   items <- liftIO getItemsFromJHS
-  eitherWithDB $ do
-    delete $ Select [] "juhuasuan"
-    insertMany "juhuasuan" $ map itemToDocument items
+  checkTBKandSaveTo "juhuasuan" items
   writeBS "<html><head><title>Succeed</title></head><body><h1>Succeed!</h1></body></html>"
 
 updateJinbiHandler = do
   extendTimeout 100000000
   types <- liftM (map jinbiItemTypeFromDocument) $ unsafeWithDB $ rest =<< (find $ select [] "jinbitypes")
   items <- liftIO $ getJinbiItems types
-  eitherWithDB $ do
-    delete $ Select [] "jinbiitems"
-    insertMany "jinbiitems" $ map jinbiItemToDocument items
+  checkTBKandSaveTo "jinbiitems" items
   writeBS "<html><head><title>Succeed</title></head><body><h1>Succeed!</h1></body></html>"
 
 updateTeJiaHandler = do
   extendTimeout 100000000
   items <- liftIO getTeJiaItems
-  eitherWithDB $ do
-    delete $ Select [] "tejia"
-    insertMany "tejia" $ map tejiaItemToDocument items
+  checkTBKandSaveTo "tejia" items
   writeBS "<html><head><title>Succeed</title></head><body><h1>Succeed!</h1></body></html>"
 
 ------------------------------------------------------------------------------

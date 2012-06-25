@@ -3,10 +3,25 @@
 module Model where
 
 import Data.Text hiding (map, foldl')
+import qualified Data.Text as T
 import Data.Time.Clock
 import Data.Maybe
 
 import Data.Bson
+
+
+class TBItem a where
+  itemTitle :: a -> Text
+  itemId :: a -> Text
+  itemTBKUrl :: a -> Maybe Text
+  itemUrl :: a -> Text
+  setTBKUrl :: a -> Maybe Text -> a
+  itemOrigPrice :: a -> Text
+  itemNewPrice :: a -> Text
+  toDocument :: a -> Document
+  fromDocument :: Document -> a
+
+itemUrlForId id = T.concat ["http://a.m.taobao.com/i", id, ".htm"]
 
 data JHSItem = JHSItem {
   jhsItemId :: Text,
@@ -20,6 +35,25 @@ data JHSItem = JHSItem {
   jhsPicUrl :: Text,
   jhsCreated :: Maybe UTCTime
   } deriving Show
+
+instance Eq JHSItem where
+  j1 == j2 = jhsItemId j1 == jhsItemId j2
+
+instance Ord JHSItem where
+  compare j1 j2 = compare (jhsItemId j1) (jhsItemId j2)
+
+instance TBItem JHSItem where
+  itemTitle = jhsTitle
+  itemId = jhsItemId
+  itemTBKUrl = jhsTBKUrl
+  itemUrl a = case jhsTBKUrl a of
+    Just u -> u
+    Nothing -> itemUrlForId $ jhsItemId a
+  setTBKUrl a u = a {jhsTBKUrl = u}
+  itemOrigPrice = T.pack . show . jhsOrigPrice
+  itemNewPrice = T.pack . show . jhsNewPrice
+  toDocument = itemToDocument
+  fromDocument = itemFromDocument
 
 itemToDocument item = ["item_id" =: jhsItemId item,
                        "title" =: jhsTitle item,
@@ -79,6 +113,25 @@ data JinbiItem = JinbiItem {
   jbiType :: JinbiItemType
   } deriving Show
 
+instance Eq JinbiItem where
+  j1 == j2 = jbiId j1 == jbiId j2
+
+instance Ord JinbiItem where
+  compare j1 j2 = compare (jbiId j1) (jbiId j2)
+
+instance TBItem JinbiItem where
+  itemTitle = jbiTitle
+  itemId = jbiId
+  itemTBKUrl = jbiTBKUrl
+  itemUrl a = case jbiTBKUrl a of
+    Just u -> u
+    Nothing -> itemUrlForId $ jbiId a
+  setTBKUrl a u = a {jbiTBKUrl = u}
+  itemOrigPrice = jbiOrigPrice
+  itemNewPrice = jbiNewPrice
+  toDocument = jinbiItemToDocument
+  fromDocument = jinbiItemFromDocument
+
 jinbiItemToDocument j = ["title" =: jbiTitle j,
                          "item_id" =: jbiId j,
                          "orig_price" =: jbiOrigPrice j,
@@ -115,6 +168,25 @@ data TeJiaItem = TeJiaItem {
   tjType :: Text
   } deriving Show
 
+instance Eq TeJiaItem where
+  t1 == t2 = tjId t1 == tjId t2
+
+instance Ord TeJiaItem where
+  compare t1 t2 = compare (tjId t1) (tjId t2)
+
+instance TBItem TeJiaItem where
+  itemTitle = tjTitle
+  itemId = tjId
+  itemTBKUrl = tjTBKUrl
+  itemUrl a = case tjTBKUrl a of
+    Just u -> u
+    Nothing -> itemUrlForId $ tjId a
+  setTBKUrl a u = a {tjTBKUrl = u}
+  itemOrigPrice = tjOrigPrice
+  itemNewPrice = tjNewPrice
+  toDocument = tejiaItemToDocument
+  fromDocument = tejiaItemFromDocument
+
 tejiaItemToDocument t = ["title" =: tjTitle t,
                          "item_id" =: tjId t,
                          "orig_price" =: tjOrigPrice t,
@@ -132,4 +204,20 @@ tejiaItemFromDocument doc = TeJiaItem {
   tjPicUrl = getTextValue doc "pic_url",
   tjTBKUrl = doc !? "tbk_url",
   tjType = getTextValue doc "type"
+  }
+
+
+data AdBanner = AdBanner {
+  adName :: Text,
+  adUrl :: Text,
+  adPicUrl :: Text
+  } deriving Show
+
+adToDocument ad = ["name" =: adName ad,
+                   "url" =: adUrl ad,
+                   "pic_url" =: adPicUrl ad]
+adFromDocument doc = AdBanner {
+  adName = getTextValue doc "name",
+  adUrl = getTextValue doc "url",
+  adPicUrl = getTextValue doc "pic_url"
   }
